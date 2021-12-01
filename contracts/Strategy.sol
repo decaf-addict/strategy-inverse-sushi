@@ -54,7 +54,7 @@ contract Strategy is BaseStrategy {
         reward.approve(address(sushiswapRouter), max);
     }
 
-    // ******** OVERRIDE THESE METHODS FROM BASE CONTRACT ************
+    // BASESTRATEGY
 
     function name() external view override returns (string memory) {
         return "StrategyInverseSushi";
@@ -140,7 +140,7 @@ contract Strategy is BaseStrategy {
 
     // INTERNAL
     // claim inv
-    function claimRewards() public onlyVaultManagers {
+    function claimRewards() external onlyVaultManagers {
         _claimRewards();
     }
 
@@ -151,9 +151,10 @@ contract Strategy is BaseStrategy {
     }
 
     // sell inv for sushi
-    function sellRewards(uint _amount) public onlyVaultManagers {
+    function sellRewards(uint _amount) external onlyVaultManagers {
         _sellRewards(_amount);
     }
+
     function _sellRewards(uint _amount) internal {
         if (_amount > 0) {
             router.swapExactTokensForTokens(_amount, uint256(0), path, address(this), now);
@@ -161,7 +162,7 @@ contract Strategy is BaseStrategy {
     }
 
     // redeem anXSushi for xSushi
-    function redeemUnderlying(uint _amountXSushi) public onlyVaultManagers {
+    function redeemUnderlying(uint _amountXSushi) external onlyVaultManagers {
         _redeemUnderlying(_amountXSushi);
     }
 
@@ -172,7 +173,7 @@ contract Strategy is BaseStrategy {
     }
 
     // return xSushi for sushi
-    function leaveSushiBar(uint _amountXSushi) public onlyVaultManagers {
+    function leaveSushiBar(uint _amountXSushi) external onlyVaultManagers {
         _leaveSushiBar(_amountXSushi);
     }
 
@@ -215,5 +216,13 @@ contract Strategy is BaseStrategy {
     function switchDex(bool isUniswap) external onlyKeepers {
         if (isUniswap) router = uniswapRouter;
         else router = sushiswapRouter;
+    }
+
+    function updateComptroller() external onlyVaultManagers {
+        address[] memory markets = new address[](1);
+        markets[0] = address(anXSushi);
+        comptroller.exitMarket(markets);
+        comptroller = IUnitroller(anXSushi.comptroller());
+        comptroller.enterMarkets(markets);
     }
 }
