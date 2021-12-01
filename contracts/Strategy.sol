@@ -106,12 +106,6 @@ contract Strategy is BaseStrategy {
         anXSushi.mint(balanceOfXSushi());
     }
 
-    function liquidatePosition2(uint _amountNeeded) public returns (uint _liquidatedAmount, uint _loss){
-        return liquidatePosition(_amountNeeded);
-    }
-
-    event Debug(string msg, uint value);
-
     function liquidatePosition(uint _amountNeeded) internal override returns (uint _liquidatedAmount, uint _loss){
         uint totalAssets = balanceOfWant();
 
@@ -119,14 +113,9 @@ contract Strategy is BaseStrategy {
             uint toExitSushi = _amountNeeded.sub(totalAssets);
             uint toExitXSushi = toExitSushi.mul(1e18).div(sushiPerXSushi());
             uint exitable = Math.min(toExitXSushi, anXSushi.balanceOfUnderlying(address(this)));
-            emit Debug("toExitSushi", toExitSushi);
-            emit Debug("toExitXSushi", toExitXSushi);
-            emit Debug("exitable", exitable);
-
             anXSushi.redeemUnderlying(exitable);
             _leaveSushiBar(balanceOfXSushi());
             _liquidatedAmount = Math.min(balanceOfWant(), _amountNeeded);
-            emit Debug("_liquidatedAmount", _liquidatedAmount);
             _loss = _amountNeeded > _liquidatedAmount ? _amountNeeded.sub(_liquidatedAmount) : 0;
         } else {
             _liquidatedAmount = _amountNeeded;
@@ -155,7 +144,6 @@ contract Strategy is BaseStrategy {
         _claimRewards();
     }
 
-    // claim inv
     function _claimRewards() internal {
         if (comptroller.compAccrued(address(this)) > 0) {
             comptroller.claimComp(address(this));
@@ -166,7 +154,6 @@ contract Strategy is BaseStrategy {
     function sellRewards(uint _amount) public onlyVaultManagers {
         _sellRewards(_amount);
     }
-    // sell inv for sushi
     function _sellRewards(uint _amount) internal {
         if (_amount > 0) {
             router.swapExactTokensForTokens(_amount, uint256(0), path, address(this), now);
@@ -178,7 +165,6 @@ contract Strategy is BaseStrategy {
         _redeemUnderlying(_amountXSushi);
     }
 
-    // redeem anXSushi for xSushi
     function _redeemUnderlying(uint _amountXSushi) internal {
         if (_amountXSushi > 0) {
             anXSushi.redeemUnderlying(_amountXSushi);
@@ -190,7 +176,6 @@ contract Strategy is BaseStrategy {
         _leaveSushiBar(_amountXSushi);
     }
 
-    // return xSushi for sushi
     function _leaveSushiBar(uint _amountXSushi) internal {
         if (_amountXSushi > 0) {
             xSushi.leave(_amountXSushi);
