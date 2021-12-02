@@ -38,8 +38,10 @@ contract Strategy is BaseStrategy {
 
     address[] path;
     uint constant private max = type(uint).max;
+    uint public minRewards = 0.1 * 1e18;
 
     constructor(address _vault) public BaseStrategy(_vault) {
+        require(want == sushi);
         require(xSushi.sushi() == address(sushi));
         comptroller = IUnitroller(anXSushi.comptroller());
 
@@ -145,7 +147,7 @@ contract Strategy is BaseStrategy {
     }
 
     function _claimRewards() internal {
-        if (comptroller.compAccrued(address(this)) > 0) {
+        if (comptroller.compAccrued(address(this)) > minRewards) {
             comptroller.claimComp(address(this));
         }
     }
@@ -224,5 +226,9 @@ contract Strategy is BaseStrategy {
         comptroller.exitMarket(address(anXSushi));
         comptroller = IUnitroller(anXSushi.comptroller());
         comptroller.enterMarkets(markets);
+    }
+
+    function setMinRewards(uint _minAmountToClaim) external onlyVaultManagers {
+        minRewards = _minAmountToClaim;
     }
 }
