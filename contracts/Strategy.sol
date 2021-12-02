@@ -221,7 +221,7 @@ contract Strategy is BaseStrategy {
     function updateComptroller() external onlyVaultManagers {
         address[] memory markets = new address[](1);
         markets[0] = address(anXSushi);
-        comptroller.exitMarket(markets);
+        comptroller.exitMarket(anXSushi);
         comptroller = IUnitroller(anXSushi.comptroller());
         comptroller.enterMarkets(markets);
     }
