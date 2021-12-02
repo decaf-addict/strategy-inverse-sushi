@@ -213,7 +213,7 @@ contract Strategy is BaseStrategy {
 
 
     // SETTERS
-    function switchDex(bool isUniswap) external onlyKeepers {
+    function switchDex(bool isUniswap) external onlyVaultManagers {
         if (isUniswap) router = uniswapRouter;
         else router = sushiswapRouter;
     }
