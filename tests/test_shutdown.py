@@ -13,8 +13,9 @@ def test_vault_shutdown_can_withdraw(
     vault.deposit(amount, {"from": user})
     assert token.balanceOf(vault.address) == amount
 
+    # Sushi doesn't allow 0 address deposit
     if token.balanceOf(user) > 0:
-        token.transfer(ZERO_ADDRESS, token.balanceOf(user), {"from": user})
+        token.transfer(gov, token.balanceOf(user), {"from": user})
 
     # Harvest 1: Send funds through the strategy
     strategy.harvest({"from": gov})
