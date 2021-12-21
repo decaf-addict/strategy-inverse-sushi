@@ -141,7 +141,7 @@ contract Strategy is BaseStrategy {
     }
 
     function _claimRewards() internal {
-        if (comptroller.compAccrued(address(this)) > minRewards) {
+        if (balanceOfPendingReward() > minRewards) {
             comptroller.claimComp(address(this));
         }
     }
@@ -195,6 +195,10 @@ contract Strategy is BaseStrategy {
 
     function balanceOfReward() public view returns (uint){
         return reward.balanceOf(address(this));
+    }
+    
+    function balanceOfPendingReward() public view returns (uint){
+        return comptroller.compAccrued(address(this));
     }
 
     function sushiPerXSushi() public view returns (uint){
