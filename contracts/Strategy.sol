@@ -7,7 +7,7 @@ pragma experimental ABIEncoderV2;
 
 // These are the core Yearn libraries
 import {BaseStrategy, StrategyParams} from "@yearnvaults/contracts/BaseStrategy.sol";
-import {SafeERC20, SafeMath, IERC20, Address} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import {IERC20, Address} from "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import {Math} from "@openzeppelin/contracts/math/Math.sol";
 import "../interfaces/Inverse.sol";
 import "../interfaces/Uniswap.sol";
@@ -22,9 +22,7 @@ interface ISushiBar is IERC20 {
 }
 
 contract Strategy is BaseStrategy {
-    using SafeERC20 for IERC20;
     using Address for address;
-    using SafeMath for uint;
 
     IERC20 public constant sushi = IERC20(0x6B3595068778DD592e39A122f4f5a5cF09C90fE2);
     IERC20 public constant reward = IERC20(0x41D5D79431A913C4aE7d69a668ecdfE5fF9DFB68);
@@ -78,11 +76,7 @@ contract Strategy is BaseStrategy {
         uint before = balanceOfWant();
 
         // redeem lending profit from anXSushi to xSushi
-        uint eta = estimatedTotalAssets();
-        uint debt = vault.strategies(address(this)).totalDebt;
-        uint lendingProfitSushi = eta > debt ? eta.sub(debt) : 0;
-        uint lendingProfitXSushi = lendingProfitSushi.mul(1e18).div(sushiPerXSushi());
-        _redeemUnderlying(lendingProfitXSushi);
+        _redeemUnderlying(lendingProfit());
 
         // return xSushi for sushi
         _leaveSushiBar(balanceOfXSushi());
@@ -138,7 +132,7 @@ contract Strategy is BaseStrategy {
 
     function protectedTokens() internal view override returns (address[] memory){}
 
-    function ethToWant(uint _amtInWei) public view virtual override returns (uint){return _amtInWei;}
+    function ethToWant(uint _amtInWei) public view override returns (uint){return _amtInWei;}
 
     // INTERNAL
     // claim inv
@@ -211,6 +205,14 @@ contract Strategy is BaseStrategy {
 
     function xSushiPerAnXSushi() public view returns (uint) {
         return anXSushi.exchangeRateStored();
+    }
+
+    // profit in terms of amount anXSushi
+    function lendingProfit() public view returns (uint){
+        uint eta = estimatedTotalAssets();
+        uint debt = vault.strategies(address(this)).totalDebt;
+        uint lendingProfitSushi = eta > debt ? eta.sub(debt) : 0;
+        return lendingProfitSushi.mul(1e18).div(sushiPerXSushi());
     }
 
 
